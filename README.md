@@ -20,4 +20,46 @@ It was created using AI tools and extended manually. The goal is to provide a si
 
 1. Clone or download this repository  
    ```bash
-   git clone https://github.com/<your-username>/markdown-editor-lite.git
+   git clone https://github.com/drol666/markdown-editor-lite.git
+   
+2. Open markdown_editor_lite.html in your browser.
+   That’s it – no build step required.
+
+## 🤝 Contributing
+
+This project is shared for learning, feedback, and community improvements.
+
+- If you find a bug or have an idea for an improvement, please **open an issue**.
+
+- If you implement enhancements, feel free to **open a Pull Request** with your version.
+
+Please keep changes clear and documented.
+
+## 📄 License
+
+This project is released under the **MIT License** – feel free to use, share, and modify.
+
+
+---
+
+## 2. Documentation file
+
+You may want a separate file `DOCUMENTATION.md` with usage details (toolbar description, keyboard shortcuts, export behavior). I can prepare this for you in full if you like.
+
+---
+
+## 3. Process to share on GitHub
+
+Here’s a clear workflow for you (assuming you already have a GitHub account):
+
+1. On your computer, create a new folder and put:
+   - `markdown_editor_lite.html`  
+   - `README.md` (from above)  
+   - (optional) `DOCUMENTATION.md`  
+
+2. Open a terminal and run:
+   ```bash
+   cd path/to/your/folder
+   git init
+   git add .
+   git commit -m "Initial commit: Markdown Editor Lite"
