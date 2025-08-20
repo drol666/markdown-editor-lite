@@ -1,0 +1,2339 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Editor Lite</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/display/placeholder.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/selection/active-line.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/edit/continuelist.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/material-darker.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/default.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.min.css" />
+
+  <style>
+    :root {
+      --primary-color: #6c757d;
+      --secondary-color: #495057;
+      --accent-color: #28a745;
+      --danger-color: #dc3545;
+      --warning-color: #ffc107;
+      --info-color: #17a2b8;
+      --light-color: #f8f9fa;
+      --dark-color: #343a40;
+      --border-color: #dee2e6;
+      --text-color: #495057;
+      --bg-color: #ffffff;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] {
+      --primary-color: #495057;
+      --secondary-color: #343a40;
+      --light-color: #1f2937;
+      --dark-color: #111827;
+      --border-color: #374151;
+      --text-color: #e5e7eb;
+      --bg-color: #111827;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+        "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+      background-color: var(--light-color);
+      min-height: 100vh;
+      padding: 0px;
+      color: var(--text-color);
+      transition: var(--transition);
+    }
+
+    .container {
+      background: var(--bg-color);
+      border-radius: 5px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      animation: slideUp 0.6s ease-out;
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 2px 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .file-save-group {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      padding: 4px;
+    }
+
+    .filename-input {
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: white;
+      border-radius: 20px 0 0 20px;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+      min-width: 150px;
+      transition: var(--transition);
+    }
+
+    .filename-input:focus {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .save-btn {
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: white;
+      border-radius: 0 20px 20px 0;
+      cursor: pointer;
+      font-size: 18px;
+      transition: var(--transition);
+    }
+
+    .save-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .mode-switch {
+      display: flex;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      padding: 4px;
+    }
+
+    .mode-btn {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .mode-btn.active {
+      background: white;
+      color: var(--primary-color);
+    }
+
+    .mode-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .theme-toggle {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 16px;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .main-layout {
+      display: flex;
+      height: calc(100vh - 120px);
+      min-height: 500px;
+    }
+
+    .vertical-toolbar {
+      width: 65px;
+      background: var(--light-color);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .vertical-tool-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+      width: 100%;
+      align-items: center;
+    }
+
+    .vertical-tool-group:last-child {
+      border-bottom: none;
+    }
+
+    .tool-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-color);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 14px;
+      transition: var(--transition);
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 45px;
+      height: 45px;
+    }
+
+    .tool-btn:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .tool-btn.accent {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+
+    .tool-btn.accent:hover {
+      background: #218838;
+      border-color: #218838;
+    }
+
+    .tool-btn strong,
+    .tool-btn em,
+    .tool-btn s {
+      font-size: 1.2rem;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+    }
+
+    .split-view .editor-pane {
+      flex: 0 0 50%;
+      max-width: 50%;
+    }
+
+    .split-view .preview-pane {
+      flex: 1;
+      max-width: 50%;
+    }
+
+    .single-pane .preview-pane {
+      display: none;
+    }
+
+    .single-pane .editor-pane {
+      flex: 1;
+      max-width: 100%;
+    }
+
+    .editor-pane,
+    .preview-pane {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .file-info-bar {
+      background: var(--light-color);
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--secondary-color);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .file-name {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .editor-container {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .CodeMirror {
+      height: 100% !important;
+      font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace !important;
+      font-size: 14px !important;
+      line-height: 1.6 !important;
+    }
+
+    .preview-content {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+        "Helvetica Neue", sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      padding: 20px;
+      background: var(--bg-color);
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .preview-content h1,
+    .preview-content h2,
+    .preview-content h3,
+    .preview-content h4,
+    .preview-content h5,
+    .preview-content h6 {
+      color: var(--dark-color);
+      margin-top: 24px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      line-height: 1.25;
+      position: relative;
+    }
+
+    [data-theme="dark"] .preview-content h1,
+    [data-theme="dark"] .preview-content h2,
+    [data-theme="dark"] .preview-content h3,
+    [data-theme="dark"] .preview-content h4,
+    [data-theme="dark"] .preview-content h5,
+    [data-theme="dark"] .preview-content h6 {
+      color: var(--light-color);
+    }
+
+    .preview-content h1:hover .heading-anchor,
+    .preview-content h2:hover .heading-anchor,
+    .preview-content h3:hover .heading-anchor,
+    .preview-content h4:hover .heading-anchor,
+    .preview-content h5:hover .heading-anchor,
+    .preview-content h6:hover .heading-anchor {
+      opacity: 1;
+    }
+
+    .heading-anchor {
+      position: absolute;
+      left: -20px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: normal;
+      font-size: 0.8em;
+    }
+
+    .heading-anchor:hover {
+      color: var(--primary-color);
+    }
+
+    .preview-content h1 {
+      font-size: 2em;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-content h2 {
+      font-size: 1.5em;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-content h3 {
+      font-size: 1.25em;
+    }
+
+    .preview-content p {
+      margin-bottom: 16px;
+    }
+
+    .preview-content ul,
+    .preview-content ol {
+      padding-left: 2em;
+      margin-bottom: 16px;
+    }
+
+    .preview-content blockquote {
+      padding: 0 1em;
+      color: var(--secondary-color);
+      border-left: 0.25em solid var(--border-color);
+      margin: 0 0 16px;
+    }
+
+    .preview-content code {
+      background: rgba(175, 184, 193, 0.2);
+      border-radius: 6px;
+      padding: 0.2em 0.4em;
+      font-family: monospace;
+      font-size: 85%;
+    }
+
+    .preview-content pre {
+      background-color: #f6f8fa;
+      padding: 16px;
+      overflow: auto;
+      line-height: 1.45;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    .preview-content {
+      /* existujúce pravidlá... */
+      scroll-behavior: smooth;
+    }
+
+    .sync-line {
+      background-color: rgba(40, 167, 69, 0.1);
+      border-left: 3px solid var(--accent-color);
+      transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .preview-content pre {
+      background-color: #2d3748;
+    }
+
+    .toc {
+      background: var(--light-color);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .toc h2 {
+      margin-top: 0 !important;
+      margin-bottom: 16px !important;
+      font-size: 1.3em !important;
+      color: var(--primary-color) !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      padding-bottom: 8px !important;
+    }
+
+    .toc ul {
+      list-style: none;
+      padding-left: 0 !important;
+      margin: 0;
+    }
+
+    .toc ul ul {
+      padding-left: 20px !important;
+      margin-top: 4px;
+    }
+
+    .toc li {
+      margin: 4px 0;
+    }
+
+    .toc a {
+      color: var(--text-color);
+      text-decoration: none;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: var(--transition);
+      display: inline-block;
+    }
+
+    .toc a:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .tab-converter-panel {
+      background: var(--light-color);
+      border-top: 1px solid var(--border-color);
+      padding: 20px 30px;
+      display: none;
+    }
+
+    .tab-converter-panel.active {
+      display: block;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 40px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: var(--transition);
+      color: var(--secondary-color);
+    }
+
+    .drop-zone.dragover {
+      border-color: var(--accent-color);
+      background-color: rgba(40, 167, 69, 0.1);
+      color: var(--accent-color);
+    }
+
+    .status-bar {
+      background: var(--dark-color);
+      color: white;
+      padding: 10px 30px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .auto-save-indicator {
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+
+    .auto-save-indicator.saving {
+      color: var(--warning-color);
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: var(--bg-color);
+      min-width: 240px;
+      box-shadow: var(--shadow-lg);
+      padding: 12px;
+      z-index: 1;
+      top: 100%;
+      right: 0;
+      margin-top: 0px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+    }
+
+    .dropdown-content a {
+      color: var(--text-color);
+      padding: 10px 16px;
+      text-decoration: none;
+      display: block;
+      border-radius: 6px;
+    }
+
+    .dropdown-content a:hover {
+      background-color: var(--light-color);
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--accent-color);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.error {
+      background: var(--danger-color);
+    }
+
+    .notification.warning {
+      background: var(--warning-color);
+      color: var(--dark-color);
+    }
+
+    .tab-input {
+      width: 100%;
+      height: 120px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      resize: vertical;
+      margin-bottom: 15px;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .convert-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .convert-btn:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(73, 80, 87, 0.3);
+    }
+
+    .recent-files {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .recent-file {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .recent-file:hover {
+      background-color: var(--light-color);
+    }
+
+    .recent-file-name {
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .recent-file-date {
+      font-size: 11px;
+      color: var(--secondary-color);
+    }
+
+    .word-count-detail {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .word-count-detail:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .full-screen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-color);
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+    }
+
+    .full-screen-overlay.active {
+      display: flex;
+    }
+
+    .full-screen-header {
+      background: var(--primary-color);
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-fullscreen {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+
+    .close-fullscreen:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .search-replace-bar {
+      background: var(--light-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: none;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-replace-bar input {
+      padding: 4px 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 12px;
+      min-width: 150px;
+    }
+
+    .search-replace-bar button {
+      padding: 4px 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-color);
+      color: var(--text-color);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: var(--transition);
+    }
+
+    .search-replace-bar button:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .editor-container.dragover::after {
+      content: "Drop MD file here to load";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(40, 167, 69, 0.1);
+      border: 3px dashed var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent-color);
+      z-index: 100;
+    }
+
+    .focus-mode-enabled .CodeMirror-line:not(.CodeMirror-activeline) {
+      opacity: 0.3 !important;
+    }
+
+    .focus-mode-enabled .CodeMirror-activeline-background {
+      background: var(--accent-color) !important;
+      opacity: 0.1 !important;
+    }
+
+    .focus-mode-enabled .CodeMirror-cursor {
+      border-left: 2px solid var(--accent-color) !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-controls">
+        <div class="file-save-group">
+          <input type="text" class="filename-input" id="fileNameInput" value="New Document.md" />
+          <button class="save-btn" onclick="saveMarkdown()" title="Save (Ctrl+S)">💾</button>
+        </div>
+        <div class="mode-switch">
+          <button class="mode-btn active" onclick="switchMode('split', event)">
+            Split View
+          </button>
+          <button class="mode-btn" onclick="switchMode('editor', event)">
+            Editor Only
+          </button>
+          <button class="mode-btn" onclick="switchMode('converter', event)">
+            Table Converter
+          </button>
+        </div>
+        <div class="dropdown">
+          <button class="mode-btn">File & Export</button>
+          <div class="dropdown-content">
+            <a href="#" onclick="openFile()">Open MD File</a>
+            <a href="#" onclick="newFile()">New File</a>
+            <a href="#" onclick="copyMarkdown()">Copy Raw Editor Text</a>
+            <a href="#" onclick="copyHTML()">Copy HTML Preview</a>
+            <a href="#" onclick="saveMarkdown()">Save MarkDown</a>
+            <a href="#" onclick="exportHTML()">Export as HTML</a>
+            <a href="#" onclick="exportHTMLWithCustomCSS()">Export as HTML (Custom CSS)</a>
+            <a href="#" onclick="exportPDF()">Export as PDF</a>
+            <a href="#" onclick="toggleFullScreen()">Full Screen</a>
+          </div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
+      </div>
+    </div>
+
+    <div class="main-layout" id="mainLayout">
+      <div class="vertical-toolbar" id="verticalToolbar">
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="toggleScrollSync()" title="Toggle Scroll Sync">🔗</button>
+          <button class="tool-btn" onclick="editor.execCommand('find')" title="Search (Ctrl+F)">🔍</button>
+          <button class="tool-btn" onclick="toggleSearchReplace()" title="Search and Replace (Ctrl+H)">🔄</button>
+          <button class="tool-btn" onclick="insertDate()" title="Insert Date">📅</button>
+          <button class="tool-btn" onclick="insertTime()" title="Insert Time">⏰</button>
+        </div>
+
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="insertMarkdown('**', '**')" title="Bold Text">
+            <strong>B</strong>
+          </button>
+          <button class="tool-btn" onclick="insertMarkdown('*', '*')" title="Italic Text">
+            <em>I</em>
+          </button>
+          <button class="tool-btn" onclick="insertMarkdown('~~', '~~')" title="Strikethrough Text">
+            <s>S</s>
+          </button>
+          <button class="tool-btn" onclick="insertMarkdown('`', '`')" title="Inline Code">
+            <code>&lt;/&gt;</code>
+          </button>
+        </div>
+
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="insertMarkdown('# ', '')" title="Heading 1">H1</button>
+          <button class="tool-btn" onclick="insertMarkdown('## ', '')" title="Heading 2">H2</button>
+          <button class="tool-btn" onclick="insertMarkdown('### ', '')" title="Heading 3">H3</button>
+        </div>
+
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="insertMarkdown('- ', '')" title="Bulleted List">•</button>
+          <button class="tool-btn" onclick="insertMarkdown('1. ', '')" title="Numbered List">1.</button>
+          <button class="tool-btn" onclick="insertMarkdown('> ', '')" title="Blockquote">❝</button>
+        </div>
+
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="insertMarkdown('[', '](url)')" title="Link">🔗</button>
+          <button class="tool-btn" onclick="triggerImageUpload()" title="Upload Image">🖼️</button>
+          <button class="tool-btn" onclick="insertMarkdown('---\n', '')" title="Horizontal Rule">—</button>
+        </div>
+
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="insertTable()" title="Insert Table">📊</button>
+          <button class="tool-btn" onclick="insertCodeBlock()" title="Code Block">📝</button>
+          <button class="tool-btn" onclick="insertTOC()" title="Table of Contents (TOC)">📑</button>
+        </div>
+
+        <div class="vertical-tool-group">
+          <button class="tool-btn" onclick="toggleFocusMode()" id="focusModeBtn" title="Focus Mode (Ctrl+F)">🎯</button>
+          <button class="tool-btn" onclick="insertTemplate()" title="Insert Template (Ctrl+Shift+T)">📋</button>
+          <button class="tool-btn" onclick="showDocumentOutline()" title="Document Outline (Ctrl+Shift+O)">🧭</button>
+          <button class="tool-btn" onclick="showAdvancedStats()" title="Advanced Statistics (Ctrl+Shift+S)">📈</button>
+          <button class="tool-btn" onclick="setWordGoal()" title="Set Word Goal (Ctrl+G)">🏅</button>
+        </div>
+      </div>
+
+      <div class="content-area split-view" id="contentArea">
+        <div class="editor-pane" id="editorPane">
+          <div class="file-info-bar">
+            <span class="file-name" id="fileName">New Document.md</span>
+            <span id="encoding">UTF-8</span>
+          </div>
+          <div class="search-replace-bar" id="searchReplaceBar">
+            <input type="text" id="searchInput" placeholder="Search..." />
+            <input type="text" id="replaceInput" placeholder="Replace with..." />
+            <button onclick="findNext()">Next</button>
+            <button onclick="findPrev()">Prev</button>
+            <button onclick="replaceOne()">Replace</button>
+            <button onclick="replaceAll()">Replace All</button>
+            <button onclick="closeSearchReplace()">×</button>
+          </div>
+          <div class="editor-container" id="editorContainer">
+            <textarea id="markdownEditor"></textarea>
+          </div>
+        </div>
+
+        <div class="preview-pane" id="previewPane">
+          <div class="file-info-bar">
+            <span>Preview</span>
+            <span id="previewInfo">GitHub Flavored Markdown</span>
+          </div>
+          <div class="preview-content" id="preview"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-converter-panel" id="tabConverter">
+      <div class="drop-zone" id="fileDropZone">
+        <div>Drag and drop an MD file here or click to select</div>
+        <div style="font-size: 12px; margin-top: 10px; color: var(--secondary-color);">
+          Supported formats: .md, .markdown, .txt
+        </div>
+      </div>
+
+      <div class="recent-files" id="recentFiles">
+        <h4 style="margin-bottom: 10px;">Recently Opened Files:</h4>
+      </div>
+
+      <h3 style="margin-bottom: 15px; margin-top: 30px;">Table Converter</h3>
+      <textarea class="tab-input" id="tabInput"
+        placeholder="Paste tab-separated text here (copied from Excel/Google Sheets)...&#10;&#10;Name&#9;Age&#9;City&#10;John&#9;25&#9;New York&#10;Anna&#9;30&#9;London"></textarea>
+      <button class="convert-btn" onclick="convertTabToMarkdown()">
+        <span>Convert to Markdown Table</span>
+      </button>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-item"><span id="statusText">Ready</span></div>
+      <div class="status-item">
+        <span id="autoSaveStatus" class="auto-save-indicator">Auto-save: On</span>
+      </div>
+      <div class="status-item">
+        <span id="wordCount" class="word-count-detail" onclick="showDetailedStats()">0 words, 0 chars</span>
+      </div>
+      <div class="status-item">
+        <span id="readingTime">~0 min read</span>
+      </div>
+      <div class="status-item">
+        <span id="cursorPosition">Line 1, Column 1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-screen-overlay" id="fullScreenOverlay">
+    <div class="full-screen-header">
+      <span>Markdown Editor - Full Screen</span>
+      <button class="close-fullscreen" onclick="toggleFullScreen()">×</button>
+    </div>
+    <div style="flex: 1; display: flex;">
+      <div class="editor-container" style="flex: 1;">
+        <div id="fullScreenEditor"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+  <input type="file" id="fileInput" accept=".md,.markdown,.txt" style="display: none;" />
+  <input type="file" id="imageInput" accept="image/*" style="display: none;" />
+
+  <script>
+    // Global variables
+    let editor;
+    let fullScreenEditorInstance;
+    let currentMode = "split";
+    let autoSaveTimer;
+    let isDarkModeEnabled = false;
+    let imageStore = {};
+    let currentFileName = "New Document.md";
+    let isModified = false;
+    let recentFiles = [];
+    let searchQuery = '';
+    let replaceQuery = '';
+    let fileHandle = null;
+    let focusModeEnabled = false;
+    let wordGoal = 0;
+    let wordGoalEnabled = false;
+
+    let isScrollingEditor = false;
+    let isScrollingPreview = false;
+    let scrollSyncEnabled = true;
+    let lineMap = [];
+
+    // Try to get recent files from localStorage, but handle gracefully if it fails
+    try {
+      recentFiles = JSON.parse(localStorage.getItem('recentMarkdownFiles') || '[]');
+    } catch (e) {
+      recentFiles = [];
+    }
+
+    function generateHeadingId(text) {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/--+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function generateTOC(content) {
+      const lines = content.split('\n');
+      const headings = [];
+      const usedIds = new Set();
+
+      lines.forEach((line, index) => {
+        const match = line.match(/^(#{1,6})\s+(.+)$/);
+        if (match) {
+          const level = match[1].length;
+          const title = match[2].trim();
+          let id = generateHeadingId(title);
+
+          let uniqueId = id;
+          let counter = 1;
+          while (usedIds.has(uniqueId)) {
+            uniqueId = `${id}-${counter}`;
+            counter++;
+          }
+          usedIds.add(uniqueId);
+
+          headings.push({
+            level,
+            title,
+            id: uniqueId,
+            line: index + 1
+          });
+        }
+      });
+
+      return headings;
+    }
+
+    function createTOCMarkdown(headings) {
+      if (headings.length === 0) {
+        return '';
+      }
+
+      let toc = '## Table of Contents\n\n';
+
+      headings.forEach(heading => {
+        const indent = '  '.repeat(heading.level - 1);
+        toc += `${indent}- [${heading.title}](#${heading.id})\n`;
+      });
+
+      return toc + '\n';
+    }
+
+    function initializeApp() {
+      const textarea = document.getElementById("markdownEditor");
+      editor = CodeMirror.fromTextArea(textarea, {
+        mode: "markdown",
+        theme: "default",
+        lineNumbers: true,
+        lineWrapping: true,
+        styleActiveLine: true,
+        placeholder: "# Start writing your Markdown...\n\n## Example Usage:\n\n- **Bold text**\n- *Italic text*\n- `code`\n- [link](https://example.com)\n\n> Blockquote\n\n```javascript\nconsole.log('Hello, World!');\n```\n\n| Column 1 | Column 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |",
+        extraKeys: {
+          Enter: "newlineAndIndentContinueMarkdownList",
+          Tab: function (cm) {
+            cm.replaceSelection("  ");
+          },
+          "F11": function (cm) { toggleFullScreen(); },
+          "Ctrl-S": function (cm) { saveMarkdown(); },
+          "Cmd-S": function (cm) { saveMarkdown(); },
+          "Ctrl-O": function (cm) { openFile(); },
+          "Cmd-O": function (cm) { openFile(); },
+        },
+      });
+
+      editor.on("cursorActivity", function () {
+        const cursor = editor.getCursor();
+        document.getElementById("cursorPosition").textContent = `Line ${cursor.line + 1}, Column ${cursor.ch + 1}`;
+      });
+
+      editor.on("change", function () {
+        updatePreview();
+        scheduleAutoSave();
+        markAsModified();
+      });
+
+      document.getElementById("fileNameInput").addEventListener("input", function (e) {
+        currentFileName = e.target.value;
+        document.getElementById("fileName").textContent = currentFileName;
+        markAsModified();
+      });
+
+      loadFromLocalStorage();
+      updatePreview();
+      setupFileDragDrop();
+      setupImageDragDrop();
+      updateRecentFilesList();
+      loadWordGoal();
+
+      const savedTheme = localStorage.getItem("markdownEditorTheme");
+      if (savedTheme === "dark") {
+        toggleTheme();
+      }
+
+      document.getElementById('fileInput').addEventListener('change', handleFileLoad);
+      document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+
+      document.getElementById('fileDropZone').addEventListener('click', () => {
+        document.getElementById('fileInput').click();
+      });
+
+
+      editor.on("scroll", function () {
+        if (!isScrollingPreview && scrollSyncEnabled && currentMode === 'split') {
+          syncPreviewFromEditor();
+        }
+      });
+
+      // Scroll sync pre preview
+      const previewElement = document.getElementById('preview');
+      previewElement.addEventListener('scroll', function () {
+        if (!isScrollingEditor && scrollSyncEnabled && currentMode === 'split') {
+          syncEditorFromPreview();
+        }
+      });
+
+      setTimeout(() => editor.refresh(), 100);
+    }
+
+    function updatePreview() {
+      if (currentMode === "converter") return;
+      const markdown = editor.getValue();
+
+      const renderer = new marked.Renderer();
+
+      renderer.heading = function (text, level) {
+        const id = generateHeadingId(text);
+        return `<h${level} id="${id}">
+            <a class="heading-anchor" href="#${id}" title="Permanent link">#</a>
+            ${text}
+          </h${level}>`;
+      };
+
+      marked.setOptions({
+        gfm: true,
+        breaks: true,
+        headerIds: false,
+        mangle: false,
+        pedantic: false,
+        smartLists: true,
+        smartypants: false,
+        renderer: renderer,
+        highlight: function (code, lang) {
+          if (lang && hljs.getLanguage(lang)) {
+            try {
+              return hljs.highlight(lang, code).value;
+            } catch (__) { }
+          }
+          return code;
+        },
+      });
+
+      try {
+        let processedMarkdown = markdown;
+
+        const tocRegex = /^\[TOC\]$/gm;
+        if (tocRegex.test(processedMarkdown)) {
+          const headings = generateTOC(markdown);
+          const tocMarkdown = createTOCMarkdown(headings);
+          processedMarkdown = processedMarkdown.replace(tocRegex, tocMarkdown);
+        }
+
+        const html = marked.parse(processedMarkdown);
+        document.getElementById("preview").innerHTML = html;
+
+        addAnchorClickHandlers();
+
+      } catch (error) {
+        console.error("Error parsing Markdown:", error);
+        document.getElementById("preview").innerHTML = '<p style="color: red;">Error parsing Markdown</p>';
+      }
+      updateStatistics(markdown);
+    }
+
+    function addAnchorClickHandlers() {
+      const anchors = document.querySelectorAll('.preview-content .heading-anchor');
+      anchors.forEach(anchor => {
+        anchor.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = anchor.getAttribute('href').substring(1);
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            if (window.history && window.history.pushState) {
+              window.history.pushState(null, null, `#${targetId}`);
+            }
+
+            if (navigator.clipboard) {
+              const fullUrl = window.location.href;
+              navigator.clipboard.writeText(fullUrl).then(() => {
+                showNotification('Link copied to clipboard!', 'success');
+              }).catch(() => {
+                showNotification('Failed to copy link', 'error');
+              });
+            }
+          }
+        });
+      });
+    }
+
+    function insertTOC() {
+      const doc = editor.getDoc();
+      const cursor = doc.getCursor();
+
+      const tocPlaceholder = '[TOC]\n\n';
+      doc.replaceRange(tocPlaceholder, cursor);
+
+      updatePreview();
+
+      editor.focus();
+      showNotification('TOC placeholder inserted! It will be automatically generated.', 'success');
+    }
+
+    function scheduleAutoSave() {
+      clearTimeout(autoSaveTimer);
+      document.getElementById("autoSaveStatus").textContent = "Auto-save: Saving...";
+      document.getElementById("autoSaveStatus").className = "auto-save-indicator saving";
+
+      autoSaveTimer = setTimeout(() => {
+        saveToLocalStorage();
+        document.getElementById("autoSaveStatus").textContent = "Auto-save: Saved";
+        document.getElementById("autoSaveStatus").className = "auto-save-indicator";
+      }, 2000);
+    }
+
+    function saveToLocalStorage() {
+      try {
+        const content = editor.getValue();
+        localStorage.setItem("markdownEditorContent", content);
+        localStorage.setItem("markdownEditorFileName", currentFileName);
+      } catch (e) {
+        console.warn("Could not save to localStorage:", e);
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const savedContent = localStorage.getItem("markdownEditorContent");
+        const savedFileName = localStorage.getItem("markdownEditorFileName");
+
+        if (savedContent) {
+          editor.setValue(savedContent);
+        }
+
+        if (savedFileName) {
+          currentFileName = savedFileName;
+          document.getElementById("fileNameInput").value = currentFileName;
+          document.getElementById("fileName").textContent = currentFileName;
+        }
+      } catch (e) {
+        console.warn("Could not load from localStorage:", e);
+      }
+    }
+
+    function showNotification(message, type = "success", duration = 3000) {
+      const notification = document.getElementById("notification");
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add("show");
+      setTimeout(() => {
+        notification.classList.remove("show");
+      }, duration);
+    }
+
+    function createModal(title, content) {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.cssText = `
+position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+background: rgba(0,0,0,0.5); z-index: 1001;
+display: flex; align-items: center; justify-content: center;
+`;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+background: var(--bg-color); border-radius: 8px;
+box-shadow: var(--shadow-lg); max-width: 500px; width: 90%;
+max-height: 80vh; overflow: hidden;
+border: 1px solid var(--border-color);
+`;
+
+      modal.innerHTML = `
+<div
+  style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--light-color);">
+  <h3 style="margin: 0; color: var(--text-color);">${title}</h3>
+  <button onclick="this.closest('.modal-overlay').remove()"
+    style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color);">&times;</button>
+</div>
+<div>${content}</div>
+`;
+
+      overlay.appendChild(modal);
+
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          overlay.remove();
+        }
+      });
+
+      return overlay;
+    }
+
+    function toggleFocusMode() {
+      focusModeEnabled = !focusModeEnabled;
+
+      const editorWrapper = document.querySelector('.CodeMirror');
+      if (editorWrapper) {
+        editorWrapper.classList.toggle('focus-mode-enabled', focusModeEnabled);
+      }
+
+      if (focusModeEnabled) {
+        showNotification('Focus mode enabled', 'success');
+      } else {
+        showNotification('Focus mode disabled', 'success');
+      }
+    }
+
+    function setWordGoal() {
+      const goal = prompt('Enter your word goal:', wordGoal || '');
+      if (goal && !isNaN(goal)) {
+        wordGoal = parseInt(goal);
+        wordGoalEnabled = true;
+        try {
+          localStorage.setItem('wordGoal', wordGoal.toString());
+        } catch (e) {
+          console.warn("Could not save word goal:", e);
+        }
+        updateWordGoalDisplay();
+        showNotification(`Goal set to ${wordGoal} words`, 'success');
+      }
+    }
+
+    function updateWordGoalDisplay() {
+      if (!wordGoalEnabled || !wordGoal) return;
+
+      const currentWords = window.detailedStats?.words || 0;
+      const percentage = Math.min((currentWords / wordGoal) * 100, 100);
+
+      const wordCountElement = document.getElementById('wordCount');
+      const originalText = wordCountElement.textContent;
+
+      if (currentWords >= wordGoal) {
+        wordCountElement.innerHTML = `${originalText} (${percentage.toFixed(0)}%)`;
+        wordCountElement.style.color = 'var(--accent-color)';
+      } else {
+        wordCountElement.innerHTML = `${originalText} (${percentage.toFixed(0)}% of ${wordGoal})`;
+        wordCountElement.style.color = 'var(--text-color)';
+      }
+    }
+
+    const templates = {
+      'blog-post': `# Post Title
+
+*Date: ${new Date().toLocaleDateString('en-US')}*
+
+[TOC]
+
+## Introduction
+
+A brief introduction to the topic...
+
+## Main Content
+
+### Subheading 1
+
+Content for this section...
+
+### Subheading 2
+
+Content for this section...
+
+## Conclusion
+
+Summary and final thoughts...
+
+---
+*Tags: #tag1 #tag2 #tag3*`,
+
+      'documentation': `# Documentation
+
+[TOC]
+
+## Overview
+
+A brief description of the project or component.
+
+## Installation
+
+\`\`\`bash
+npm install package-name
+\`\`\`
+
+## Usage
+
+### Basic Usage
+
+\`\`\`javascript
+const example = require('package-name');
+console.log(example);
+\`\`\`
+
+### Advanced Usage
+
+More detailed examples...
+
+## API Reference
+
+### Method 1
+
+- **Description:** What the method does
+- **Parameters:** - \`param1\` (string) - Description of the parameter
+- **Returns:** Description of the return value
+
+## Examples
+
+## Changelog
+
+### v1.0.0
+- Added basic functionality`,
+
+      'meeting-notes': `# Meeting Minutes
+
+**Date:** ${new Date().toLocaleDateString('en-US')}
+**Time:** ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+**Attendees:**
+
+[TOC]
+
+## Agenda
+1.
+2.
+3.
+
+## Topics Discussed
+
+### Topic 1
+-
+-
+
+### Topic 2
+-
+-
+
+## Decisions
+-
+-
+
+## Action Items
+- [ ] Task 1 - Responsible: ___ - Due Date: ___
+- [ ] Task 2 - Responsible: ___ - Due Date: ___
+
+## Next Steps
+
+## Notes`,
+
+      'readme': `# Project Name
+
+A short description of the project and its purpose.
+
+[TOC]
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+
+\`\`\`bash
+# Installation commands
+git clone https://github.com/username/project.git
+cd project
+npm install
+\`\`\`
+
+## Usage
+
+\`\`\`javascript
+// Example usage
+const project = require('./project');
+project.run();
+\`\`\`
+
+## Contributions
+
+1. Fork the project
+2. Create your feature branch (\`git checkout -b feature/AmazingFeature\`)
+3. Commit your changes (\`git commit -m 'Add AmazingFeature'\`)
+4. Push to the branch (\`git push origin feature/AmazingFeature\`)
+5. Open a Pull Request
+
+## License
+
+Distributed under the [MIT](LICENSE) License.
+
+## Contact
+
+Your Name - [email@example.com](mailto:email@example.com)
+
+Project Link: [https://github.com/username/project](https://github.com/username/project)`
+    };
+
+    function insertTemplate() {
+      const templateNames = Object.keys(templates);
+      const templateList = templateNames.map(name => `
+<div style="padding: 8px 16px; cursor: pointer; border-radius: 4px; margin: 4px 0;"
+  onmouseover="this.style.backgroundColor='var(--light-color)'" onmouseout="this.style.backgroundColor='transparent'"
+  onclick="applyTemplate('${name}')">
+  ${name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+</div>
+`).join('');
+
+      const content = `
+<div style="padding: 20px;">
+  <p style="margin-bottom: 16px; color: var(--secondary-color);">Select a template (includes auto-generated TOC):</p>
+  ${templateList}
+</div>
+`;
+
+      const modal = createModal('Document Templates', content);
+      document.body.appendChild(modal);
+    }
+
+    function applyTemplate(templateName) {
+      if (templates[templateName]) {
+        if (isModified && !confirm('You have unsaved changes. Do you want to continue?')) {
+          return;
+        }
+
+        editor.setValue(templates[templateName]);
+        fileHandle = null;
+        currentFileName = `${templateName}.md`;
+        document.getElementById('fileNameInput').value = currentFileName;
+        document.getElementById('fileName').textContent = currentFileName;
+        isModified = false;
+
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+
+        showNotification(`Template "${templateName}" applied`, 'success');
+      }
+    }
+
+    function showAdvancedStats() {
+      const content = editor.getValue();
+      const stats = {
+        words: content.trim().split(/\s+/).filter(w => w.length > 0).length,
+        chars: content.length,
+        charsNoSpaces: content.replace(/\s/g, '').length,
+        lines: content.split('\n').length,
+        paragraphs: content.split(/\n\s*\n/).filter(p => p.trim()).length,
+        sentences: (content.match(/[.!?]+/g) || []).length,
+        headings: (content.match(/^#{1,6}\s/gm) || []).length,
+        links: (content.match(/\[.*?\]\(.*?\)/g) || []).length,
+        images: (content.match(/!\[.*?\]\(.*?\)/g) || []).length,
+        codeBlocks: (content.match(/```[\s\S]*?```/g) || []).length,
+        inlineCode: (content.match(/`[^`\n]+`/g) || []).length,
+        lists: (content.match(/^[\s]*[-*+]\s/gm) || []).length,
+        numberedLists: (content.match(/^[\s]*\d+\.\s/gm) || []).length,
+        blockquotes: (content.match(/^>/gm) || []).length,
+        tocPlaceholders: (content.match(/^\[TOC\]$/gm) || []).length,
+      };
+
+      window.detailedStats = stats;
+
+      const readingTime = Math.ceil(stats.words / 200);
+      const speakingTime = Math.ceil(stats.words / 150);
+
+      const statsHtml = `
+<div style="padding: 20px; max-height: 500px; overflow-y: auto;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div>
+      <h4 style="margin: 0 0 12px 0; color: var(--primary-color);">Basic</h4>
+      <div>Words: <strong>${stats.words}</strong></div>
+      <div>Characters: <strong>${stats.chars}</strong></div>
+      <div>Characters (no spaces): <strong>${stats.charsNoSpaces}</strong></div>
+      <div>Lines: <strong>${stats.lines}</strong></div>
+      <div>Paragraphs: <strong>${stats.paragraphs}</strong></div>
+      <div>Sentences: <strong>${stats.sentences}</strong></div>
+    </div>
+
+    <div>
+      <h4 style="margin: 0 0 12px 0; color: var(--primary-color);">Time</h4>
+      <div>Reading: <strong>~${readingTime} min</strong></div>
+      <div>Speaking: <strong>~${speakingTime} min</strong></div>
+      <div>Typing (40 WPM): <strong>~${Math.ceil(stats.words / 40)} min</strong></div>
+    </div>
+
+    <div>
+      <h4 style="margin: 0 0 12px 0; color: var(--primary-color);">Structure</h4>
+      <div>Headings: <strong>${stats.headings}</strong></div>
+      <div>TOC Placeholders: <strong>${stats.tocPlaceholders}</strong></div>
+      <div>Lists: <strong>${stats.lists}</strong></div>
+      <div>Numbered Lists: <strong>${stats.numberedLists}</strong></div>
+      <div>Blockquotes: <strong>${stats.blockquotes}</strong></div>
+    </div>
+
+    <div>
+      <h4 style="margin: 0 0 12px 0; color: var(--primary-color);">Media</h4>
+      <div>Links: <strong>${stats.links}</strong></div>
+      <div>Images: <strong>${stats.images}</strong></div>
+      <div>Code Blocks: <strong>${stats.codeBlocks}</strong></div>
+      <div>Inline Code: <strong>${stats.inlineCode}</strong></div>
+    </div>
+  </div>
+</div>
+`;
+
+      const modal = createModal('Advanced Statistics', statsHtml);
+      document.body.appendChild(modal);
+    }
+
+    function loadWordGoal() {
+      try {
+        const saved = localStorage.getItem('wordGoal');
+        if (saved) {
+          wordGoal = parseInt(saved);
+          wordGoalEnabled = true;
+        }
+      } catch (e) {
+        console.warn("Could not load word goal:", e);
+      }
+    }
+
+    function updateStatistics(text) {
+      const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+      const chars = text.length;
+      const readingTime = Math.ceil(words / 200);
+
+      document.getElementById("wordCount").textContent = `${words} words, ${chars} chars`;
+      document.getElementById("readingTime").textContent = `~${readingTime} min read`;
+
+      updateWordGoalDisplay();
+    }
+
+    function markAsModified() {
+      isModified = true;
+      const fileName = document.getElementById("fileName");
+      if (fileName && !fileName.textContent.endsWith('*')) {
+        fileName.textContent += '*';
+      }
+    }
+
+    function markAsSaved() {
+      isModified = false;
+      const fileName = document.getElementById("fileName");
+      if (fileName && fileName.textContent.endsWith('*')) {
+        fileName.textContent = fileName.textContent.slice(0, -1);
+      }
+    }
+
+    function switchMode(mode, event) {
+      currentMode = mode;
+      const buttons = document.querySelectorAll('.mode-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const contentArea = document.getElementById('contentArea');
+      const tabConverter = document.getElementById('tabConverter');
+      const verticalToolbar = document.getElementById('verticalToolbar');
+
+      if (mode === 'split') {
+        contentArea.className = 'content-area split-view';
+        tabConverter.classList.remove('active');
+        verticalToolbar.style.display = 'flex';
+        // Re-enable scroll sync when switching to split view
+        scrollSyncEnabled = true;
+      } else if (mode === 'editor') {
+        contentArea.className = 'content-area single-pane';
+        tabConverter.classList.remove('active');
+        verticalToolbar.style.display = 'flex';
+        // Disable scroll sync in editor-only mode
+        scrollSyncEnabled = false;
+      } else if (mode === 'converter') {
+        contentArea.className = 'content-area single-pane';
+        tabConverter.classList.add('active');
+        verticalToolbar.style.display = 'none';
+        // Disable scroll sync in converter mode
+        scrollSyncEnabled = false;
+      }
+
+      if (editor) {
+        setTimeout(() => editor.refresh(), 100);
+      }
+    }
+
+    function insertMarkdown(before, after = '') {
+      const doc = editor.getDoc();
+      const cursor = doc.getCursor();
+      const selection = doc.getSelection();
+
+      if (selection) {
+        doc.replaceSelection(before + selection + after);
+      } else {
+        const text = before + after;
+        doc.replaceRange(text, cursor);
+        doc.setCursor(cursor.line, cursor.ch + before.length);
+      }
+
+      editor.focus();
+    }
+
+    function insertDate() {
+      const date = new Date().toLocaleDateString();
+      insertMarkdown(date, '');
+    }
+
+    function insertTime() {
+      const time = new Date().toLocaleTimeString();
+      insertMarkdown(time, '');
+    }
+
+    function insertTable() {
+      const tableMarkdown = `
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+`;
+      insertMarkdown(tableMarkdown.trim(), '');
+    }
+
+    function insertCodeBlock() {
+      const codeBlock = '```\n\n```';
+      const doc = editor.getDoc();
+      const cursor = doc.getCursor();
+      doc.replaceRange(codeBlock, cursor);
+      doc.setCursor(cursor.line + 1, 0);
+      editor.focus();
+    }
+
+    function toggleTheme() {
+      isDarkModeEnabled = !isDarkModeEnabled;
+      const body = document.body;
+
+      if (isDarkModeEnabled) {
+        body.setAttribute('data-theme', 'dark');
+        editor.setOption('theme', 'material-darker');
+        try {
+          localStorage.setItem("markdownEditorTheme", "dark");
+        } catch (e) {
+          console.warn("Could not save theme preference:", e);
+        }
+      } else {
+        body.removeAttribute('data-theme');
+        editor.setOption('theme', 'default');
+        try {
+          localStorage.setItem("markdownEditorTheme", "light");
+        } catch (e) {
+          console.warn("Could not save theme preference:", e);
+        }
+      }
+
+      const themeToggle = document.querySelector('.theme-toggle');
+      if (themeToggle) {
+        themeToggle.textContent = isDarkModeEnabled ? '☀️' : '🌙';
+      }
+    }
+
+    function saveMarkdown() {
+      const content = editor.getValue();
+      const blob = new Blob([content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentFileName || 'document.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      markAsSaved();
+      updateRecentFiles(currentFileName, content);
+      showNotification('File saved successfully!', 'success');
+    }
+
+    function openFile() {
+      document.getElementById('fileInput').click();
+    }
+
+    function newFile() {
+      if (isModified && !confirm('You have unsaved changes. Do you want to continue?')) {
+        return;
+      }
+
+      editor.setValue('');
+      fileHandle = null;
+      currentFileName = 'New Document.md';
+      document.getElementById('fileNameInput').value = currentFileName;
+      document.getElementById('fileName').textContent = currentFileName;
+      isModified = false;
+      showNotification('New file created', 'success');
+    }
+
+    function copyMarkdown() {
+      const content = editor.getValue();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(content).then(() => {
+          showNotification('Markdown copied to clipboard!', 'success');
+        }).catch(err => {
+          showNotification('Failed to copy to clipboard', 'error');
+        });
+      } else {
+        showNotification('Clipboard not supported', 'error');
+      }
+    }
+
+    function copyHTML() {
+      const htmlContent = document.getElementById('preview').innerHTML;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(htmlContent).then(() => {
+          showNotification('HTML copied to clipboard!', 'success');
+        }).catch(err => {
+          showNotification('Failed to copy to clipboard', 'error');
+        });
+      } else {
+        showNotification('Clipboard not supported', 'error');
+      }
+    }
+
+    function exportHTML() {
+      const htmlContent = document.getElementById('preview').innerHTML;
+      const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${currentFileName.replace('.md', '')}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2, h3, h4, h5, h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
+        h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid #eee; }
+        h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid #eee; }
+        p { margin-bottom: 16px; }
+        code { background: rgba(175, 184, 193, 0.2); border-radius: 6px; padding: 0.2em 0.4em; font-family: monospace; font-size: 85%; }
+        pre { background-color: #f6f8fa; padding: 16px; overflow: auto; line-height: 1.45; border-radius: 6px; margin-bottom: 16px; }
+        blockquote { padding: 0 1em; color: #6a737d; border-left: 0.25em solid #dfe2e5; margin: 0 0 16px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+        th, td { border: 1px solid #dfe2e5; padding: 6px 13px; }
+        th { font-weight: 600; background-color: #f6f8fa; }
+    </style>
+</head>
+<body>
+    ${htmlContent}
+</body>
+</html>`;
+
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentFileName.replace('.md', '.html');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showNotification('HTML file exported!', 'success');
+    }
+
+    function exportHTMLWithCustomCSS() {
+      const customCSS = prompt('Enter custom CSS (optional):');
+      const htmlContent = document.getElementById('preview').innerHTML;
+      const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${currentFileName.replace('.md', '')}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        ${customCSS || ''}
+    </style>
+</head>
+<body>
+    ${htmlContent}
+</body>
+</html>`;
+
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentFileName.replace('.md', '_custom.html');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showNotification('Custom HTML file exported!', 'success');
+    }
+
+    function exportPDF() {
+      const element = document.getElementById('preview');
+      const opt = {
+        margin: 1,
+        filename: currentFileName.replace('.md', '.pdf'),
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
+      showNotification('PDF export started...', 'success');
+    }
+
+    function toggleFullScreen() {
+      const overlay = document.getElementById('fullScreenOverlay');
+      overlay.classList.toggle('active');
+
+      if (overlay.classList.contains('active')) {
+        if (!fullScreenEditorInstance) {
+          const textarea = document.createElement('textarea');
+          document.getElementById('fullScreenEditor').appendChild(textarea);
+
+          fullScreenEditorInstance = CodeMirror.fromTextArea(textarea, {
+            mode: "markdown",
+            theme: isDarkModeEnabled ? "material-darker" : "default",
+            lineNumbers: true,
+            lineWrapping: true,
+            styleActiveLine: true,
+            extraKeys: {
+              "Escape": function (cm) { toggleFullScreen(); }
+            }
+          });
+        }
+
+        fullScreenEditorInstance.setValue(editor.getValue());
+        setTimeout(() => fullScreenEditorInstance.refresh(), 100);
+      } else {
+        if (fullScreenEditorInstance) {
+          editor.setValue(fullScreenEditorInstance.getValue());
+          updatePreview();
+        }
+      }
+    }
+
+    function handleFileLoad(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        editor.setValue(e.target.result);
+        currentFileName = file.name;
+        document.getElementById('fileNameInput').value = currentFileName;
+        document.getElementById('fileName').textContent = currentFileName;
+        isModified = false;
+        updatePreview();
+        updateRecentFiles(file.name, e.target.result);
+        showNotification(`File "${file.name}" loaded successfully!`, 'success');
+      };
+      reader.readAsText(file);
+    }
+
+    function setupFileDragDrop() {
+      const editorContainer = document.getElementById('editorContainer');
+
+      editorContainer.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        editorContainer.classList.add('dragover');
+      });
+
+      editorContainer.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        editorContainer.classList.remove('dragover');
+      });
+
+      editorContainer.addEventListener('drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        editorContainer.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          const file = files[0];
+          if (file.type === 'text/markdown' || file.name.endsWith('.md') || file.name.endsWith('.markdown')) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              editor.setValue(event.target.result);
+              currentFileName = file.name;
+              document.getElementById('fileNameInput').value = currentFileName;
+              document.getElementById('fileName').textContent = currentFileName;
+              updatePreview();
+              showNotification(`File "${file.name}" loaded!`, 'success');
+            };
+            reader.readAsText(file);
+          } else {
+            showNotification('Please drop a Markdown file (.md)', 'error');
+          }
+        }
+      });
+    }
+
+    function setupImageDragDrop() {
+      const editorContainer = document.getElementById('editorContainer');
+
+      editorContainer.addEventListener('drop', function (e) {
+        const files = e.dataTransfer.files;
+        for (let file of files) {
+          if (file.type.startsWith('image/')) {
+            handleImageFile(file);
+            break;
+          }
+        }
+      });
+    }
+
+    function triggerImageUpload() {
+      document.getElementById('imageInput').click();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      handleImageFile(file);
+    }
+
+    function handleImageFile(file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const imageData = e.target.result;
+        const imageId = 'img_' + Date.now();
+        imageStore[imageId] = imageData;
+
+        const imageMarkdown = `![${file.name}](${imageData})`;
+        insertMarkdown(imageMarkdown, '');
+        showNotification('Image uploaded and inserted!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateRecentFiles(fileName, content) {
+      try {
+        const fileData = {
+          name: fileName,
+          date: new Date().toLocaleString(),
+          content: content.substring(0, 100) + '...',
+          fullContent: content
+        };
+
+        recentFiles = recentFiles.filter(f => f.name !== fileName);
+        recentFiles.unshift(fileData);
+        recentFiles = recentFiles.slice(0, 5);
+
+        localStorage.setItem('recentMarkdownFiles', JSON.stringify(recentFiles));
+        updateRecentFilesList();
+      } catch (e) {
+        console.warn("Could not save to recent files:", e);
+      }
+    }
+
+    function updateRecentFilesList() {
+      const container = document.getElementById('recentFiles');
+      if (!container) return;
+
+      if (recentFiles.length === 0) {
+        container.innerHTML = '<p style="color: var(--secondary-color); font-style: italic;">No recent files</p>';
+        return;
+      }
+
+      const html = '<h4 style="margin-bottom: 10px;">Recently Opened Files:</h4>' +
+        recentFiles.map(file => `
+          <div class="recent-file" onclick="loadRecentFile('${file.name}')">
+            <div>
+              <div class="recent-file-name">${file.name}</div>
+              <div class="recent-file-date">${file.date}</div>
+            </div>
+          </div>
+        `).join('');
+
+      container.innerHTML = html;
+    }
+
+    function loadRecentFile(fileName) {
+      const file = recentFiles.find(f => f.name === fileName);
+      if (file) {
+        if (isModified && !confirm('You have unsaved changes. Do you want to continue?')) {
+          return;
+        }
+
+        editor.setValue(file.fullContent);
+        currentFileName = file.name;
+        document.getElementById('fileNameInput').value = currentFileName;
+        document.getElementById('fileName').textContent = currentFileName;
+        isModified = false;
+        updatePreview();
+        showNotification(`Loaded "${fileName}"`, 'success');
+      }
+    }
+
+    function convertTabToMarkdown() {
+      const tabData = document.getElementById('tabInput').value;
+      if (!tabData.trim()) {
+        showNotification('Please paste some tab-separated data first', 'warning');
+        return;
+      }
+
+      const lines = tabData.trim().split('\n');
+      if (lines.length < 2) {
+        showNotification('Need at least 2 lines (header and data)', 'warning');
+        return;
+      }
+
+      const headers = lines[0].split('\t');
+      const separator = '|' + headers.map(() => '----------').join('|') + '|';
+
+      let markdown = '|' + headers.join('|') + '|\n';
+      markdown += separator + '\n';
+
+      for (let i = 1; i < lines.length; i++) {
+        const cells = lines[i].split('\t');
+        while (cells.length < headers.length) {
+          cells.push('');
+        }
+        markdown += '|' + cells.slice(0, headers.length).join('|') + '|\n';
+      }
+
+      insertMarkdown(markdown, '');
+      showNotification('Table converted and inserted!', 'success');
+    }
+
+    function toggleSearchReplace() {
+      const bar = document.getElementById('searchReplaceBar');
+      const isVisible = bar.style.display === 'flex';
+      bar.style.display = isVisible ? 'none' : 'flex';
+
+      if (!isVisible) {
+        document.getElementById('searchInput').focus();
+      }
+    }
+
+    function closeSearchReplace() {
+      document.getElementById('searchReplaceBar').style.display = 'none';
+    }
+
+    function findNext() {
+      const query = document.getElementById('searchInput').value;
+      if (!query) return;
+
+      editor.execCommand('findNext');
+    }
+
+    function findPrev() {
+      const query = document.getElementById('searchInput').value;
+      if (!query) return;
+
+      editor.execCommand('findPrev');
+    }
+
+    function replaceOne() {
+      const searchQuery = document.getElementById('searchInput').value;
+      const replaceQuery = document.getElementById('replaceInput').value;
+
+      if (!searchQuery) return;
+
+      editor.execCommand('replace');
+    }
+
+    function replaceAll() {
+      const searchQuery = document.getElementById('searchInput').value;
+      const replaceQuery = document.getElementById('replaceInput').value;
+
+      if (!searchQuery) return;
+
+      editor.execCommand('replaceAll');
+    }
+
+    function showDetailedStats() {
+      showAdvancedStats();
+    }
+
+    function showDocumentOutline() {
+      const content = editor.getValue();
+      const headings = generateTOC(content);
+
+      if (headings.length === 0) {
+        showNotification('No headings found in document', 'warning');
+        return;
+      }
+
+      const outlineHTML = headings.map(heading => `
+        <div style="padding: 4px 0; padding-left: ${(heading.level - 1) * 20}px; cursor: pointer; border-radius: 4px;"
+          onmouseover="this.style.backgroundColor='var(--light-color)'" 
+          onmouseout="this.style.backgroundColor='transparent'"
+          onclick="goToLine(${heading.line})">
+          <strong>H${heading.level}</strong> ${heading.title}
+          <span style="color: var(--secondary-color); font-size: 12px; margin-left: 10px;">Line ${heading.line}</span>
+        </div>
+      `).join('');
+
+      const content_modal = `
+        <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
+          <p style="margin-bottom: 16px; color: var(--secondary-color);">Click on any heading to jump to it:</p>
+          ${outlineHTML}
+        </div>
+      `;
+
+      const modal = createModal('Document Outline', content_modal);
+      document.body.appendChild(modal);
+    }
+
+    function goToLine(lineNumber) {
+      editor.setCursor(lineNumber - 1, 0);
+      editor.focus();
+
+      const modal = document.querySelector('.modal-overlay');
+      if (modal) modal.remove();
+
+      showNotification(`Jumped to line ${lineNumber}`, 'success');
+    }
+
+    // Event listeners for keyboard shortcuts
+    document.addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 's':
+            e.preventDefault();
+            saveMarkdown();
+            break;
+          case 'o':
+            e.preventDefault();
+            openFile();
+            break;
+          case 'h':
+            e.preventDefault();
+            toggleSearchReplace();
+            break;
+          case 'g':
+            if (e.shiftKey) {
+              e.preventDefault();
+              setWordGoal();
+            }
+            break;
+        }
+
+        if (e.shiftKey) {
+          switch (e.key) {
+            case 'T':
+              e.preventDefault();
+              insertTemplate();
+              break;
+            case 'O':
+              e.preventDefault();
+              showDocumentOutline();
+              break;
+            case 'S':
+              e.preventDefault();
+              showAdvancedStats();
+              break;
+          }
+        }
+      }
+
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    function syncPreviewFromEditor() {
+      isScrollingEditor = true;
+
+      const editor_scroll = editor.getScrollInfo();
+      const preview = document.getElementById('preview');
+
+      // Vypočítaj relatívnu pozíciu
+      const scrollRatio = editor_scroll.top / (editor_scroll.height - editor_scroll.clientHeight);
+      const targetScroll = scrollRatio * (preview.scrollHeight - preview.clientHeight);
+
+      preview.scrollTop = Math.max(0, targetScroll);
+
+      setTimeout(() => {
+        isScrollingEditor = false;
+      }, 100);
+    }
+
+    function syncEditorFromPreview() {
+      isScrollingPreview = true;
+
+      const preview = document.getElementById('preview');
+      const scrollInfo = editor.getScrollInfo();
+
+      // Vypočítaj relatívnu pozíciu
+      const scrollRatio = preview.scrollTop / (preview.scrollHeight - preview.clientHeight);
+      const targetScroll = scrollRatio * (scrollInfo.height - scrollInfo.clientHeight);
+
+      editor.scrollTo(0, Math.max(0, targetScroll));
+
+      setTimeout(() => {
+        isScrollingPreview = false;
+      }, 100);
+    }
+
+    function toggleScrollSync() {
+      scrollSyncEnabled = !scrollSyncEnabled;
+      showNotification(`Scroll sync ${scrollSyncEnabled ? 'enabled' : 'disabled'}`, 'success');
+    }
+
+    // Initialize the application when the page loads
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+
+</html>
